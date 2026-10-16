@@ -14,8 +14,13 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: bookinfo-dev
       server: https://kubernetes.default.svc
+    - namespace: bookinfo-staging
+      server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
       name: bookinfo-dev
+    - group: ""
+      kind: Namespace
+      name: bookinfo-staging
