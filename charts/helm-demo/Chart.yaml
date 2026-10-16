@@ -1,0 +1,6 @@
+apiVersion: v2
+name: helm-demo
+description: A simple Nginx application managed by Argo CD and Helm
+type: application
+version: 0.1.0
+appVersion: "1.28.0"
