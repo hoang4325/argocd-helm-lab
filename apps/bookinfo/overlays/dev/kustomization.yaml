@@ -6,3 +6,6 @@ namespace: bookinfo-dev
 resources:
   - ../../base
   - namespace.yaml
+
+patches:
+  - path: smoke-test-failure-patch.yaml

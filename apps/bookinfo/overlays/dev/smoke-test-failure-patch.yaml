@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bookinfo-smoke-test
+spec:
+  template:
+    spec:
+      containers:
+        - name: smoke-test
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              echo "INTENTIONAL FAILURE INJECTION: wrong service port"
+              curl --fail --silent --show-error \
+                --max-time 5 \
+                http://products:9081/productpage \
+                -o /dev/null
+              echo "PASS: Book Info returned HTTP success"
