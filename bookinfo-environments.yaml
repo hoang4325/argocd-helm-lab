@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: bookinfo-environments
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: bookinfo-dev
+          - env: staging
+            namespace: bookinfo-staging
+
+  template:
+    metadata:
+      name: 'bookinfo-{{ .env }}'
+      annotations:
+        argocd.argoproj.io/compare-options: IgnoreExtraneous
+
+    spec:
+      project: bookinfo
+
+      source:
+        repoURL: https://github.com/hoang4325/bookinfo.git
+        targetRevision: main
+        path: 'apps/bookinfo/overlays/{{ .env }}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
+  syncPolicy:
+    preserveResourcesOnDeletion: true
