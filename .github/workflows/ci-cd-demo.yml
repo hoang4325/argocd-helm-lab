@@ -1,0 +1,176 @@
+name: CI/CD Demo - Build, Test and Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/ci-cd-demo/**"
+      - ".github/workflows/ci-cd-demo.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: ghcr.io/hoang4325/ci-cd-demo
+
+jobs:
+  build-test-publish:
+    name: Build, smoke test and publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.image_tag.outputs.tag }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Define immutable image tag
+        id: image_tag
+        shell: bash
+        run: |
+          echo "tag=sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/ci-cd-demo
+          platforms: linux/amd64
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}
+          load: true
+          push: false
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test container
+        shell: bash
+        env:
+          TEST_IMAGE: ${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          docker run -d \
+            --name ci-cd-demo-test \
+            -p 127.0.0.1:18080:80 \
+            "$TEST_IMAGE"
+
+          cleanup() {
+            docker rm -f ci-cd-demo-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          for attempt in $(seq 1 15); do
+            if curl -fsS http://127.0.0.1:18080/ \
+              -o /tmp/ci-cd-demo-index.html 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          grep -q "Argo CD CI/CD Lab" /tmp/ci-cd-demo-index.html
+          echo "PASS: container returned the expected HTML"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish tested image
+        shell: bash
+        env:
+          IMAGE_TAG: ${{ steps.image_tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+          echo "Published ${IMAGE_NAME}:${IMAGE_TAG}"
+
+  update-gitops:
+    name: Create GitOps image update PR
+    needs: build-test-publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout GitOps repository
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Update Helm image tag
+        shell: bash
+        env:
+          IMAGE_TAG: ${{ needs.build-test-publish.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("charts/ci-cd-demo/values.yaml")
+          content = path.read_text()
+
+          expected_repo = "repository: ghcr.io/hoang4325/ci-cd-demo"
+          if expected_repo not in content:
+              raise SystemExit(
+                  f"Expected image repository not found in {path}"
+              )
+
+          updated, count = re.subn(
+              r'(?m)^  tag:.*$',
+              f'  tag: "{os.environ["IMAGE_TAG"]}"',
+              content,
+              count=1,
+          )
+
+          if count != 1:
+              raise SystemExit(
+                  f"Expected exactly one image tag in {path}, found {count}"
+              )
+
+          path.write_text(updated)
+          print(f"Updated {path} to image tag {os.environ['IMAGE_TAG']}")
+          PY
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: automation/ci-cd-demo-image-update
+          delete-branch: true
+          add-paths: charts/ci-cd-demo/values.yaml
+          commit-message: "chore(gitops): update ci-cd-demo image"
+          title: "chore(gitops): update ci-cd-demo image"
+          body: |
+            ## Automated image update
+
+            - Application: `ci-cd-demo`
+            - Registry: GHCR
+            - Image: `${{ env.IMAGE_NAME }}:${{ needs.build-test-publish.outputs.image_tag }}`
+            - Source commit: `${{ github.sha }}`
+
+            The image was built and smoke-tested by GitHub Actions.
+            Merge this PR to make the new image tag the desired GitOps state.
