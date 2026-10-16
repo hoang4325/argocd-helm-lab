@@ -5,3 +5,4 @@ namespace: bookinfo-dev
 
 resources:
   - ../../base
+  - namespace.yaml
