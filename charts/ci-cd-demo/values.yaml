@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/hoang4325/ci-cd-demo
-  tag: "bootstrap"
+  tag: "sha-b5ea66a3c5ec26184f1b9ab5dbf4a584c66ceef9"
   pullPolicy: IfNotPresent
 
 service:
