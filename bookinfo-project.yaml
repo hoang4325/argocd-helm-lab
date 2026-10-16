@@ -4,14 +4,13 @@ metadata:
   name: bookinfo
   namespace: argocd
 spec:
-  description: Project for Bookinfo GitOps Lab
+  description: Project for the Book Info GitOps lab
+
   sourceRepos:
     - https://github.com/hoang4325/bookinfo.git
+
   destinations:
     - namespace: default
       server: https://kubernetes.default.svc
-    - namespace: argocd
+    - namespace: bookinfo-dev
       server: https://kubernetes.default.svc
-  # clusterResourceWhitelist:
-  #   - group: '*'
-  #     kind: '*'
