@@ -97,3 +97,25 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bookinfo-staging
+  namespace: argocd
+spec:
+  project: bookinfo
+  source:
+    repoURL: https://github.com/hoang4325/bookinfo.git
+    targetRevision: main
+    path: apps/bookinfo/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bookinfo-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
