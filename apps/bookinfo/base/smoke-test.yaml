@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bookinfo-smoke-test
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 90
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: smoke-test
+          image: curlimages/curl:8.10.1
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              echo "Starting Book Info smoke test"
+
+              for attempt in 1 2 3 4 5; do
+                if curl --fail --silent --show-error \
+                  --max-time 8 \
+                  http://products:9080/productpage \
+                  -o /dev/null; then
+                  echo "PASS: Book Info returned HTTP success"
+                  exit 0
+                fi
+
+                echo "Attempt ${attempt} failed"
+                sleep 3
+              done
+
+              echo "FAIL: Book Info smoke test failed" >&2
+              exit 1

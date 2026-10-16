@@ -6,3 +6,4 @@ resources:
   - products
   - ratings
   - reviews
+  - smoke-test.yaml
