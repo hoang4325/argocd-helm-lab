@@ -4,7 +4,7 @@ metadata:
   name: bookinfo-details
   namespace: argocd
 spec:
-  project: default
+  project: bookinfo
   source:
     repoURL: https://github.com/hoang4325/bookinfo.git
     targetRevision: main
@@ -24,7 +24,7 @@ metadata:
   name: bookinfo-products
   namespace: argocd
 spec:
-  project: default
+  project: bookinfo
   source:
     repoURL: https://github.com/hoang4325/bookinfo.git
     targetRevision: main
@@ -44,7 +44,7 @@ metadata:
   name: bookinfo-ratings
   namespace: argocd
 spec:
-  project: default
+  project: bookinfo
   source:
     repoURL: https://github.com/hoang4325/bookinfo.git
     targetRevision: main
@@ -64,7 +64,7 @@ metadata:
   name: bookinfo-reviews
   namespace: argocd
 spec:
-  project: default
+  project: bookinfo
   source:
     repoURL: https://github.com/hoang4325/bookinfo.git
     targetRevision: main
