@@ -6,3 +6,17 @@ namespace: bookinfo-dev
 resources:
   - ../../base
   - namespace.yaml
+
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: productpage-v1
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: productpage-v1
+        annotations:
+          lab.bookinfo.dev/recovery-marker: "recovered-1"
