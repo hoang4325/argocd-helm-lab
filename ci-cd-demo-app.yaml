@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ci-cd-demo
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/hoang4325/argocd-helm-lab.git
+    targetRevision: main
+    path: charts/ci-cd-demo
+    helm:
+      releaseName: ci-cd-demo
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ci-cd-demo
+
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
