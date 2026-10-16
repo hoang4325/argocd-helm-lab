@@ -3,6 +3,7 @@ kind: ApplicationSet
 metadata:
   name: bookinfo-environments
   namespace: argocd
+
 spec:
   goTemplate: true
   goTemplateOptions:
@@ -19,9 +20,6 @@ spec:
   template:
     metadata:
       name: 'bookinfo-{{ .env }}'
-      annotations:
-        argocd.argoproj.io/compare-options: IgnoreExtraneous
-
     spec:
       project: bookinfo
 
