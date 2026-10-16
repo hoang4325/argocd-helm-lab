@@ -7,7 +7,7 @@ plaintext trong Git repository.
 
 ## 2. Kiến trúc
 
-- GitOps repository: hoang4325/bookinfo
+- GitOps repository: hoang4325/argocd-helm-lab
 - Kubernetes: Kind
 - GitOps controller: Argo CD
 - Secret encryption: Bitnami Sealed Secrets

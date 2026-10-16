@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/hoang4325/bookinfo.git
+    repoURL: https://github.com/hoang4325/argocd-helm-lab.git
     targetRevision: main
     path: .
   destination:

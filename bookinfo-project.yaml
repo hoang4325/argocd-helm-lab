@@ -7,7 +7,7 @@ spec:
   description: Project for the Book Info GitOps lab
 
   sourceRepos:
-    - https://github.com/hoang4325/bookinfo.git
+    - https://github.com/hoang4325/argocd-helm-lab.git
 
   destinations:
     - namespace: default
